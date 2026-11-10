@@ -1,36 +1,607 @@
-UTU ENGINE PROPRIETARY SOFTWARE LICENSE
+UTU ENGINE
+END USER LICENSE AGREEMENT (EULA)
+FREE PROPRIETARY SOFTWARE LICENSE
 
-Copyright © 2026. All rights reserved.
+Version: 1.0
+Effective Date: November 10, 2026
+Licensor: Individual Entrepreneur Yergali Yerkalin (ИП Еркалин Ергали), Republic of Kazakhstan
+Business Address: 203 Islam Karimov Street, Almaty, Republic of Kazakhstan
+Software: UTU Engine — Application-centric Incident Investigation Platform
+Website: https://utu-engine.com
+General Contact: support@utu-engine.com
+Security Contact: security@utu-engine.com
 
-UTU Engine, including its application code, interface, documentation, build
-files, configuration and other original materials (the "Software"), is
-proprietary to the UTU Engine copyright owner.
+IMPORTANT: PLEASE READ THIS AGREEMENT BEFORE INSTALLING OR USING UTU ENGINE.
+UTU ENGINE IS FREE TO USE, INCLUDING FOR COMMERCIAL PURPOSES, BUT IS
+PROPRIETARY, CLOSED-SOURCE SOFTWARE. IT IS NOT AN OPEN-SOURCE LICENSE.
 
-This public distribution repository provides deployment artifacts and does not
-grant access to proprietary application source code.
+1. PARTIES, SCOPE, AND ACCEPTANCE
 
-No license or other rights to the Software are granted by possession of,
-access to, or receipt of the Software except under a separate written license
-agreement signed or otherwise accepted by the copyright owner.
+1.1. This End User License Agreement ("Agreement" or "EULA") governs the
+download, installation, access to, and use of UTU Engine and the proprietary
+components and deployment materials distributed with it (collectively, the
+"Software").
 
-Without such a separate written agreement, you may not, in whole or in part:
+1.2. The Software is provided by Individual Entrepreneur Yergali Yerkalin,
+registered in the Republic of Kazakhstan ("Licensor", "Developer", "we",
+or "us"). A person or entity using the Software is the "Licensee" or "User".
 
-- copy or reproduce the Software;
-- modify, adapt, translate, reverse engineer, or create derivative works of
-  the Software, except to the extent applicable law prohibits this restriction;
-- distribute, publish, disclose, transmit, or make the Software or its source
-  code available to third parties;
-- sublicense, rent, lease, sell, resell, assign, or otherwise transfer the
-  Software;
-- use the Software in a commercial product or service;
-- remove or alter proprietary notices.
+1.3. This Agreement is offered to individuals, sole proprietors, companies,
+educational institutions, nonprofit organizations, and other legal entities,
+subject to applicable law. "Business Licensee" means a Licensee acting for
+business or professional purposes; "Consumer" means an individual acting
+outside those purposes.
 
-Third-party software and open-source components are not relicensed by this
-document and retain their original terms and notices.
+1.4. By affirmatively accepting these terms through an interface, where one
+is provided, the Licensee agrees to be bound by them. Downloading, installing,
+or using the Software may also constitute acceptance to the extent recognized
+by applicable law. Where applicable law requires a different or additional
+form of consent, that law prevails. A person who does not accept this
+Agreement has no license to use the proprietary Software under its terms.
 
-THE SOFTWARE IS PROVIDED ONLY UNDER THE TERMS OF AN APPLICABLE WRITTEN LICENSE
-AGREEMENT. EXCEPT AS EXPRESSLY STATED IN SUCH AN AGREEMENT, NO WARRANTIES,
-SUPPORT COMMITMENTS, SERVICE LEVELS, INDEMNITIES, OR OTHER RIGHTS ARE GRANTED.
+1.5. A person accepting on behalf of an organization represents that they
+have authority to bind that organization. Individuals must have the legal
+capacity required by applicable law; where permitted, a parent or guardian
+may act for a minor.
 
-For licensing inquiries, contact the copyright owner through the official
-UTU Engine project channels.
+1.6. Nothing in this Agreement excludes or diminishes rights or protections
+that cannot lawfully be waived, including mandatory consumer rights.
+
+2. PURPOSE AND CHARACTER OF THE SOFTWARE
+
+2.1. UTU Engine is an application-centric incident investigation platform
+intended to assist with diagnosing operational incidents affecting software
+applications and related infrastructure.
+
+2.2. It may retrieve, correlate, and analyze diagnostic data from monitoring,
+logging and tracing systems, databases, operating systems, Kubernetes,
+servers, and other configured sources.
+
+2.3. The Software may use artificial intelligence, including large language
+models ("LLMs"), to plan diagnostic requests, interpret evidence, generate
+root-cause hypotheses, classify incidents, and suggest possible actions.
+
+2.4. The Software is an aid to investigation and decision-making. It is not
+a guaranteed incident detector, prevention system, response service,
+recovery service, or substitute for qualified personnel and independent
+operational safeguards.
+
+2.5. Each Licensee must assess fitness for its own environment, applicable
+law, internal policies, and intended use.
+
+3. EXPRESSLY FREE LICENSE; UNLIMITED INSTALLATIONS
+
+3.1. Subject to compliance with this Agreement, the Licensor grants the
+Licensee a worldwide, non-exclusive, non-transferable, non-sublicensable,
+royalty-free license to download, reproduce as reasonably necessary for
+authorized use, install, execute, and use the Software.
+
+3.2. The license is expressly granted FREE OF CHARGE. No license fee,
+subscription payment, royalty, or other mandatory monetary consideration is
+required to exercise the rights granted under this Agreement.
+
+3.3. The Licensee may operate an UNLIMITED number of installations in
+personal, development, test, staging, production, and disaster-recovery
+environments. Personal use and commercial use within the Licensee's own
+activities are permitted.
+
+3.4. A Licensee may authorize its employees and contractors to operate
+installations on its behalf for its authorized purposes. This does not grant
+those persons an independent right to redistribute or sublicense the
+Software; the Licensee remains responsible for compliance to the extent
+provided by law.
+
+3.5. The license includes creating reasonably necessary internal copies of
+deployment artifacts and backups for permitted installations. It does not
+authorize separate public redistribution, resale, or provision of the
+Software itself as a third-party product or hosted service.
+
+3.6. The license begins upon valid acceptance and continues unless terminated
+under this Agreement. Free use does not transfer ownership of the Software
+or create a claim to its proprietary source code.
+
+3.7. All rights not expressly granted are reserved by the Licensor and any
+applicable third-party rights holders.
+
+4. PROPRIETARY SOURCE CODE AND USE RESTRICTIONS
+
+4.1. UTU Engine is CLOSED-SOURCE PROPRIETARY SOFTWARE. The Licensor or
+respective rights holders own the applicable intellectual property rights
+in its original code, protectable architecture, interfaces, designs,
+documentation, and other proprietary materials.
+
+4.2. Free availability of an installation package, container image, Helm
+chart, repository, or deployment artifact does not make the proprietary
+Software open source and does not grant access to source code.
+
+4.3. Except to the extent expressly allowed by this Agreement, separately
+authorized in writing, or protected by mandatory law, the Licensee must not:
+
+(a) decompile, disassemble, reverse engineer, or attempt to reconstruct
+    proprietary source code or protected implementation details;
+(b) modify or create derivative works from proprietary Software components;
+(c) publish, disclose, sell, sublicense, distribute, rent, lease, or
+    otherwise supply copies of the proprietary Software to third parties
+    as an independent software product;
+(d) offer UTU Engine itself as a hosted, managed, or white-label service to
+    third parties without separate written permission;
+(e) circumvent technical measures protecting proprietary components or
+    unauthorized access restrictions;
+(f) remove or misrepresent copyright, attribution, or ownership notices;
+(g) use the Software for unauthorized access, unlawful surveillance, or
+    unlawful collection or disclosure of third-party information.
+
+4.4. The prohibitions above do not override mandatory rights to
+interoperability, decompilation or observation where legally permitted,
+lawful security research, or rights independently granted by third-party
+open-source licenses.
+
+4.5. The Licensee retains rights to its own data and materials. The Licensor
+does not acquire ownership of Licensee data or investigation reports merely
+because the Software processed or produced them, subject to third-party
+rights and applicable law.
+
+5. NO LICENSE ACTIVATION OR MANDATORY REGISTRATION
+
+5.1. The free license does not require payment, a license key, activation
+with the Licensor, or registration of each installation.
+
+5.2. The Software is not licensed per server, user, installation, cluster,
+or investigation. No numerical installation limit applies under this
+Agreement.
+
+5.3. The absence of license activation does not waive these license terms.
+
+5.4. This Agreement does not grant the Licensor remote administrative access
+to a Licensee's infrastructure or authorize the Licensor to extract its
+diagnostic data, databases, secrets, or investigation content.
+
+5.5. Any optional Licensor-operated online services or collection of
+technical information must be separately and accurately disclosed in
+applicable documentation and privacy notices. No undisclosed telemetry
+or remote data collection is authorized merely by this Agreement.
+
+5.6. The Licensor may offer optional paid services or future products under
+separate terms. Such offerings do not retroactively create mandatory fees
+for existing rights granted under this Agreement.
+
+6. AI OUTPUTS, ROOT-CAUSE ANALYSIS, AND HUMAN OVERSIGHT
+
+6.1. LLMs are probabilistic systems. They may produce false, inaccurate,
+incomplete, misleading, inconsistent, outdated, or fabricated outputs.
+
+6.2. Diagnostic findings, root-cause hypotheses, severity assessments,
+and recommended actions are informational. They are not verified facts
+unless independently confirmed.
+
+6.3. The Software does not guarantee detection of every incident or
+security issue, identification of every contributing factor, an accurate
+root cause, successful remediation, or prevention of outages or losses.
+The absence of a warning or finding does not establish that a system
+is healthy or secure.
+
+6.4. Licensees must use qualified personnel and appropriate human review
+before acting on suggestions that may affect data, service availability,
+system integrity, access controls, or production infrastructure.
+
+6.5. Licensees decide whether to restart services, change configurations,
+modify or delete data, alter infrastructure, or perform other operational
+actions. Their responsibilities for their own decisions are determined
+by their conduct and applicable law.
+
+6.6. The Licensor does not become the Licensee's infrastructure operator,
+managed service provider, security monitor, or incident response team
+merely because the Software is installed.
+
+6.7. Nothing in this section excludes the Licensor's responsibility for
+its own wrongful conduct or defects where such liability cannot lawfully
+be excluded.
+
+7. CONNECTIONS, PERMISSIONS, AND DIAGNOSTIC OPERATIONS
+
+7.1. Licensees choose the systems and data sources connected to UTU Engine
+and must have lawful authority to access and analyze them.
+
+7.2. Licensees control credentials, roles, network access, and privileges
+provided to the Software and should apply the principle of least privilege.
+
+7.3. Diagnostic functions are primarily intended for retrieval and analysis,
+but some may perform limited technical operations, including predefined
+commands over SSH, database diagnostic queries, network checks, and the
+creation or deletion of temporary Kubernetes Jobs or Pods.
+
+7.4. Such operations may consume resources, create network traffic, generate
+logs, or have other operational effects. No feature should be assumed to
+be completely passive or without operational impact.
+
+7.5. Licensees are responsible for evaluating and authorizing enabled
+diagnostics, preserving backups, operating independent monitoring,
+managing changes, and maintaining disaster-recovery arrangements.
+
+7.6. The Software must not be used to bypass applicable organizational
+security policies or laws.
+
+8. LICENSEE DATA, PERSONAL INFORMATION, AND CONFIDENTIALITY
+
+8.1. The Licensee retains its rights in data it supplies or processes.
+In a self-hosted deployment, diagnostic data and investigation history
+may be processed and stored in infrastructure controlled by the Licensee,
+depending on actual configuration.
+
+8.2. Licensees choose source systems, accessible information, retention
+settings, authorized users, external integrations, and permitted recipients
+and must establish lawful grounds for processing any personal information.
+
+8.3. Logs, traces, diagnostic evidence, configurations, and AI inputs may
+contain personal information, passwords, API keys, tokens, business secrets,
+internal addresses, database content, or other sensitive information.
+
+8.4. Sanitization, filtering, and masking features, where available, may
+be incomplete and cannot guarantee removal of all sensitive information.
+Licensees should apply data minimization and additional safeguards,
+including access controls and secret management.
+
+8.5. Licensees are responsible for appropriate protection of infrastructure,
+credentials, backups, databases, and locally held data under their control.
+
+8.6. The Licensor does not acquire general rights to inspect, store, or
+reuse Licensee investigation data by virtue of supplying the Software.
+
+8.7. Where the Licensor actually receives or processes personal information
+through a website, support request, donation, or optional service, its
+obligations are governed by applicable privacy laws and an applicable
+Privacy Notice. Where legally necessary, a separate Data Processing
+Agreement will govern processing on behalf of a Licensee.
+
+8.8. Responsibility for a breach or disclosure is determined by applicable
+law, causation, actual control, and the parties' respective actions or
+omissions. The fact that deployment is self-hosted does not necessarily
+exclude responsibility attributable to the Licensor's own conduct or
+legally actionable Software defects.
+
+9. EXTERNAL AI PROVIDERS AND THIRD-PARTY SERVICES
+
+9.1. Licensees may configure external or locally deployed AI providers and
+other third-party integrations. When an external provider is selected,
+relevant application context, incident descriptions, diagnostic evidence,
+and other request data may leave the Licensee's environment.
+
+9.2. Licensees must review the chosen provider's terms, security practices,
+data use and retention policies, locations, and applicable cross-border
+transfer rules; and must have lawful authority to transmit that data.
+
+9.3. Licensees are responsible for independently incurred provider charges,
+API usage fees, cloud costs, and third-party subscriptions. The free UTU
+Engine license does not make external services free of charge.
+
+9.4. Third-party availability, model behavior, APIs, pricing, and policies
+may change or fail. The Licensor does not guarantee their continuity.
+
+9.5. The Licensor is not a party to independent contracts between Licensees
+and their chosen third-party providers. This does not excuse the Licensor's
+own unauthorized disclosures, wrongful conduct, or non-excludable duties.
+
+10. SECURITY OF THE DEPLOYMENT ENVIRONMENT
+
+10.1. Licensees administer security of the infrastructure they control,
+including Kubernetes, containers, operating systems, databases, network
+policies, firewalls, TLS certificates, authentication, authorization,
+secrets, backups, monitoring, and incident response.
+
+10.2. Licensees should avoid unnecessary administrative privileges and
+insecure public exposure of Software interfaces and connected services.
+
+10.3. Disabling security controls, operating unsupported software, exposing
+services without suitable protection, or mishandling credentials can
+increase risks and may affect responsibility for resulting harm.
+
+10.4. Software can contain coding defects and security vulnerabilities,
+including vulnerabilities that are not yet known. The Licensor does not
+promise absolute security or the absence of every present or future
+vulnerability.
+
+10.5. The Licensor remains subject to its applicable mandatory security,
+product safety, and other legal obligations. Nothing here reallocates
+responsibility for the Licensor's own unlawful conduct to the Licensee.
+
+11. VULNERABILITY DISCLOSURE AND SECURITY INCIDENTS
+
+11.1. Suspected vulnerabilities may be reported confidentially to
+security@utu-engine.com. Reports should provide enough information for
+assessment without unnecessarily sharing production databases, passwords,
+API keys, or personal information.
+
+11.2. The Licensor may investigate reports and issue security advisories,
+patches, or mitigation guidance in accordance with its published security
+policy and applicable law.
+
+11.3. Except where a mandatory legal requirement or separate written
+commitment applies, this Agreement does not guarantee a particular
+support response time or a deadline for fixing every reported issue.
+
+11.4. Each party must perform mandatory vulnerability, incident, and
+regulatory notifications allocated to it by applicable law.
+
+11.5. The Licensee remains responsible for its own incident handling,
+evidence preservation, containment, backups, and mitigation in systems
+under its control, without relieving the Licensor of duties allocated
+to it by law.
+
+11.6. Reporting an issue does not give the Licensor unrestricted remote
+access to Licensee production infrastructure.
+
+11.7. Nothing in this Agreement prohibits legally protected security
+research, mandatory reporting, or legally required disclosures.
+
+12. VOLUNTARY CONTRIBUTIONS AND DONATIONS
+
+12.1. Licensees are not required to donate or make any payment to use
+UTU Engine under this Agreement.
+
+12.2. The Licensor may invite voluntary financial contributions toward
+the development and maintenance of the Software.
+
+12.3. A contribution is not a license fee and does not, by itself, grant
+source-code access, additional intellectual property rights, priority
+support, custom features, guaranteed maintenance, or service levels.
+
+12.4. Any separate paid services require separately disclosed terms.
+Applicable payment, tax, consumer, and refund rules remain effective,
+regardless of whether a contribution is described as a "donation".
+
+13. UPDATES, MAINTENANCE, AND SUPPORT
+
+13.1. The Licensor may release updates, new versions, security fixes, bug
+fixes, and functional changes.
+
+13.2. Except for mandatory legal obligations or separate written agreements,
+this free license does not promise 24/7 support, continuous development,
+perpetual maintenance, support for every prior version, a fixed repair
+time, a service-level agreement ("SLA"), or specific future features.
+
+13.3. The Licensor may discontinue or alter future development or optional
+features, subject to applicable law and existing commitments. Stopping
+development does not itself terminate a valid existing license.
+
+13.4. Licensees should evaluate, test, and apply updates, back up their
+data, and plan rollbacks according to their operational requirements.
+
+13.5. Any mandatory product security support period, vulnerability-handling
+obligation, or security update duty applies notwithstanding that the
+Software is distributed free of charge.
+
+14. HIGH-RISK AND SAFETY-CRITICAL USE
+
+14.1. The Software is not represented as certified to serve as the sole
+safety mechanism or decision system for medical life-support, transport
+safety, hazardous industrial processes, emergency systems, or other
+safety-critical environments.
+
+14.2. Licensees must not rely solely on UTU Engine for safety-critical
+decisions and must independently assess any special legal, technical,
+certification, and operational requirements.
+
+14.3. No certification, regulatory approval, or suitability for such
+environments is claimed unless expressly and accurately documented.
+
+15. THIRD-PARTY AND OPEN-SOURCE COMPONENTS
+
+15.1. The Software may contain or be distributed alongside third-party
+software, libraries, frameworks, databases, and open-source components.
+
+15.2. Those components remain governed by their own respective licenses;
+this Agreement does not revoke or supersede rights granted under those
+licenses or remove mandatory notice, attribution, source-offer, or other
+license obligations.
+
+15.3. Required third-party license notices must be provided as required
+by the applicable licenses.
+
+16. WARRANTY DISCLAIMER
+
+16.1. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS
+PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT ADDITIONAL CONTRACTUAL
+WARRANTIES, EXPRESS OR IMPLIED.
+
+16.2. To the extent legally permitted, the Licensor disclaims implied
+warranties of merchantability, fitness for a particular purpose,
+uninterrupted availability, and other implied contractual warranties.
+
+16.3. The Licensor does not guarantee uninterrupted or error-free operation;
+compatibility with every system; accurate AI outputs; complete incident
+detection or root-cause analysis; prevention of outages, unauthorized
+access, cyberattacks or data loss; absence of vulnerabilities; or
+achievement of a particular business or operational outcome.
+
+16.4. Demonstrations, examples, documentation, and recommendations do not
+create additional contractual warranties unless separately agreed or
+required by law.
+
+16.5. THIS SECTION DOES NOT EXCLUDE MANDATORY CONSUMER RIGHTS, LEGAL
+CONFORMITY OR SAFETY REQUIREMENTS, PRODUCT LIABILITY, OR ANY WARRANTY
+THAT APPLICABLE LAW DOES NOT ALLOW THE PARTIES TO WAIVE.
+
+17. LIMITATION AND ALLOCATION OF LIABILITY
+
+17.1. TO THE FULLEST EXTENT PERMITTED BY LAW, THE LICENSOR SHALL NOT BE
+LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE
+DAMAGES, INCLUDING LOST PROFITS, LOST BUSINESS OPPORTUNITIES, LOST
+SAVINGS, OR REPUTATIONAL LOSSES, WHERE SUCH EXCLUSIONS ARE ENFORCEABLE.
+
+17.2. The Licensor is not responsible for losses to the extent caused by
+the Licensee's unlawful or unauthorized use, insecure configuration
+under its control, compromised credentials, independently chosen
+operational actions, failure to maintain reasonable backups or security
+measures, or independent third-party service failures, taking into
+account causation and any legally attributable conduct of the Licensor.
+
+17.3. The Software is supplied free of charge without a separately
+contracted operational support or SLA commitment. This may be relevant
+to the scope of contractual obligations where applicable law permits.
+
+17.4. NO FIXED MONETARY CAP ON LIABILITY IS ESTABLISHED BY THIS AGREEMENT.
+Legally enforceable liability is governed by applicable law and the
+valid terms of this Agreement.
+
+17.5. Nothing in this Agreement limits or excludes liability to the extent
+prohibited by law, including applicable responsibility for intentional
+misconduct, personal injury, defective products, statutory security
+violations, or other non-waivable legal rights.
+
+17.6. This Agreement does not limit independent statutory claims by third
+parties and does not completely absolve the Licensor of liability for
+its own legally actionable conduct or Software defects.
+
+18. LICENSEE RESPONSIBILITIES AND THIRD-PARTY CLAIMS
+
+18.1. Licensees must use the Software lawfully, respect the rights of
+others, and have all necessary permissions to connect systems and
+process or transfer information.
+
+18.2. Licensees are responsible for actions of people to whom they
+authorize access, as provided by applicable law.
+
+18.3. To the extent permitted by law, a Business Licensee shall indemnify
+the Licensor for reasonable documented third-party claims and expenses
+directly caused by that Business Licensee's unlawful use, unauthorized
+disclosure, or violation of third-party rights, proportionate to its
+legally attributable conduct.
+
+18.4. The Licensor must provide reasonable notice of such claims and allow
+reasonable participation in their defense, subject to applicable law.
+No settlement imposing obligations on the other party may be made
+without that party's consent, unless required by law.
+
+18.5. This contractual indemnity does not apply to Consumers acting
+outside their business or professional activities and does not transfer
+responsibility for the Licensor's own wrongful conduct or legally
+attributable Software defects.
+
+19. PRIVACY AND COMMUNICATIONS WITH THE LICENSOR
+
+19.1. No account registration or license activation is required under
+this Agreement.
+
+19.2. The Licensor may nevertheless process information where Users
+voluntarily contact support, report security issues, visit its website,
+make contributions, or use any separately disclosed optional service.
+
+19.3. The categories, purposes, recipients, retention periods, and legal
+basis of data processing shall be disclosed as required by applicable
+privacy law in the relevant Privacy Notice.
+
+19.4. This Agreement alone does not authorize the Licensor to secretly
+collect telemetry, obtain remote access, or transfer Licensee diagnostic
+content to its own systems.
+
+19.5. Third-party data flows initiated through Licensee-configured
+integrations are addressed in Section 9.
+
+20. TERM AND TERMINATION
+
+20.1. The license continues until terminated under this Agreement or
+applicable law. The Licensee may stop using the Software at any time.
+
+20.2. To the extent permitted by law, the Licensor may terminate the
+license for a material breach, including unauthorized redistribution,
+serious infringement of proprietary intellectual property, or
+unlawful use.
+
+20.3. Where a material breach is reasonably capable of cure, the Licensor
+may provide written notice and 15 calendar days to cure, unless
+immediate action is required by law or justified by serious ongoing harm.
+
+20.4. Upon lawful termination, the Licensee must cease further use of
+the proprietary Software, except for rights that applicable law
+preserves.
+
+20.5. Licensee data stored in its own infrastructure remains under its
+control. Termination does not give the Licensor a right to remotely
+delete, appropriate, or access that data.
+
+20.6. Provisions regarding intellectual property, confidentiality,
+liability, third-party claims, dispute resolution, and other provisions
+that by their nature should survive termination will survive to the
+extent enforceable.
+
+21. GOVERNING LAW AND DISPUTE RESOLUTION
+
+21.1. This Agreement is governed by the laws of the Republic of Kazakhstan,
+except to the extent mandatory conflict-of-laws rules or other
+non-excludable law require otherwise.
+
+21.2. Where reasonably possible and legally appropriate, the parties will
+seek to resolve disputes through good-faith written discussions within
+30 calendar days after notice of the dispute.
+
+21.3. Subject to mandatory jurisdiction and procedural rules, disputes
+under this Agreement shall be brought before the competent courts of
+the Republic of Kazakhstan.
+
+21.4. Nothing here deprives Consumers of non-waivable protections
+available under laws of their country of residence, including any
+mandatory rules on applicable law, jurisdiction, and remedies.
+
+21.5. This section does not prevent urgent legal relief or proceedings
+that cannot lawfully be subject to a negotiation prerequisite.
+
+22. REVISIONS TO THIS AGREEMENT
+
+22.1. The Licensor may publish new versions of this Agreement, identifying
+the version and effective date of each.
+
+22.2. Revisions do not retroactively remove existing rights or impose
+new payment obligations contrary to applicable law and existing valid
+agreements.
+
+22.3. Where legally required, the Licensor will seek renewed affirmative
+acceptance before revised terms bind the relevant Licensee.
+
+22.4. Mere continued use or installation of an update constitutes
+acceptance of revised terms only where that method is legally valid.
+
+23. GENERAL PROVISIONS
+
+23.1. If any provision is invalid or unenforceable, the remaining
+provisions continue to apply to the extent permitted by law.
+
+23.2. Failure to enforce a provision is not a general waiver.
+
+23.3. Separate support, consulting, data processing, or other service
+agreements govern those services within their respective scope.
+
+23.4. This Agreement does not create an employment relationship,
+partnership, agency, fiduciary relationship, or joint venture.
+
+23.5. No right to proprietary source code or commercial redistribution
+is granted by implication.
+
+23.6. If translated, this English version controls to the extent
+permitted by applicable law and mandatory language requirements.
+
+23.7. This Agreement is not cybersecurity insurance, a guarantee of
+availability, or an undertaking to compensate for every consequence
+of an operational incident.
+
+24. LICENSOR AND CONTACT INFORMATION
+
+Licensor: Individual Entrepreneur Yergali Yerkalin
+Registered Business Name: ИП Еркалин Ергали
+Country: Republic of Kazakhstan
+Business Address: 203 Islam Karimov Street, Almaty, Republic of Kazakhstan
+Website: https://utu-engine.com
+General Inquiries: support@utu-engine.com
+Security Vulnerability Reports: security@utu-engine.com
+
+SUGGESTED ACCEPTANCE TEXT FOR AN INSTALLATION INTERFACE
+
+"I have read and understand the UTU Engine End User License Agreement,
+Version 1.0, including the terms for free proprietary use, limitations of
+AI-assisted diagnostics, data processing and security responsibilities,
+warranty disclaimers, and allocation of liability. I agree to these terms.
+If I am acting for an organization, I confirm that I am authorized to
+accept on its behalf."
+
+Suggested options: "I Agree and Continue" / "I Do Not Agree".
+
+Copyright © 2026 Yergali Yerkalin. All rights reserved.
