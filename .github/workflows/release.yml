@@ -80,12 +80,14 @@ jobs:
             -e DATABASE_URL='postgresql+psycopg://release:release@127.0.0.1:5432/release' \
             -e TOOL_TESTING_LAB_ENABLED=true \
             -e UTU_FULL_TECHNICAL_AUDIT=true \
+            -e UTU_EXPECTED_VERSION="$VERSION" \
             --entrypoint python "$SOURCE_IMAGE" -c '
+          import os
           from app.version import APP_VERSION
           from app.main import app
           from app.release_profile import is_production_image
           from app.rca.audit_visibility import full_technical_audit_enabled, resolve_technical_audit_mode
-          assert APP_VERSION == "1.0.0"
+          assert APP_VERSION == os.environ["UTU_EXPECTED_VERSION"]
           assert is_production_image()
           assert full_technical_audit_enabled() is False
           assert resolve_technical_audit_mode("audit", is_superuser=True) == "audit"
@@ -106,12 +108,19 @@ jobs:
       - name: Promote verified immutable image to versioned GHCR package
         run: |
           set -euo pipefail
-          # Refuse to overwrite existing stable versions.
+          # A previous attempt may have published the image before GHCR
+          # visibility was changed. Allow an exact-image retry, never overwrite.
           if docker buildx imagetools inspect "$TARGET:$VERSION" >/dev/null 2>&1; then
-            echo "::error::Stable image tag already exists. No overwrite permitted."
-            exit 1
+            docker pull --platform linux/amd64 "$TARGET:$VERSION"
+            source_revision="$(docker image inspect "$SOURCE_IMAGE" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+            target_revision="$(docker image inspect "$TARGET:$VERSION" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+            if [ -z "$source_revision" ] || [ "$source_revision" != "$target_revision" ]; then
+              echo "::error::Existing stable tag has different source revision. Refusing overwrite."
+              exit 1
+            fi
+          else
+            docker buildx imagetools create --tag "$TARGET:$VERSION" "$SOURCE_IMAGE"
           fi
-          docker buildx imagetools create --tag "$TARGET:$VERSION" "$SOURCE_IMAGE"
           docker buildx imagetools inspect "$TARGET:$VERSION"
       - name: Publish Helm OCI chart
         env:
@@ -119,7 +128,11 @@ jobs:
         run: |
           set -euo pipefail
           echo "$GHCR_TOKEN" | helm registry login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          helm push "dist/utu-engine-$VERSION.tgz" oci://ghcr.io/utu-engine/charts
+          if helm show chart oci://ghcr.io/utu-engine/charts/utu-engine --version "$VERSION" >/dev/null 2>&1; then
+            echo "Existing chart version retained on retry."
+          else
+            helm push "dist/utu-engine-$VERSION.tgz" oci://ghcr.io/utu-engine/charts
+          fi
       - name: Update stable latest alias
         run: |
           set -euo pipefail
@@ -132,7 +145,7 @@ jobs:
           docker logout ghcr.io || true
           helm registry logout ghcr.io || true
           DOCKER_CONFIG="$(mktemp -d)"
-          HELM_REGISTRY_CONFIG="$(mktemp)"
+          HELM_REGISTRY_CONFIG="$(mktemp -d)/config.json"
           export DOCKER_CONFIG HELM_REGISTRY_CONFIG
           docker manifest inspect "$TARGET:$VERSION" >/dev/null || {
             echo "::error::Docker package is not public. Set GHCR package visibility to Public, then retry release validation."
