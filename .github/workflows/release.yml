@@ -46,7 +46,10 @@ jobs:
           grep -q "repository: ghcr.io/utu-engine/platform" helm/utu-engine/values.yaml
           grep -q "tag: \"$VERSION\"" helm/utu-engine/values.yaml
           grep -q "pullPolicy: IfNotPresent" helm/utu-engine/values.yaml
-          ! grep -REq 'UTU_FULL_TECHNICAL_AUDIT|TOOL_TESTING_LAB_ENABLED|fullTechnicalAudit' helm/utu-engine/
+          if grep -REq 'UTU_FULL_TECHNICAL_AUDIT|TOOL_TESTING_LAB_ENABLED|fullTechnicalAudit' helm/utu-engine/; then
+            echo "::error::Internal capability leaked into public chart"
+            exit 1
+          fi
           helm lint helm/utu-engine
           helm template utu-engine helm/utu-engine -n utu-engine > "$RUNNER_TEMP/utu-chart.yaml"
           grep -q "ghcr.io/utu-engine/platform:$VERSION" "$RUNNER_TEMP/utu-chart.yaml"
@@ -128,8 +131,9 @@ jobs:
           set -euo pipefail
           docker logout ghcr.io || true
           helm registry logout ghcr.io || true
-          export DOCKER_CONFIG="$(mktemp -d)"
-          export HELM_REGISTRY_CONFIG="$(mktemp)"
+          DOCKER_CONFIG="$(mktemp -d)"
+          HELM_REGISTRY_CONFIG="$(mktemp)"
+          export DOCKER_CONFIG HELM_REGISTRY_CONFIG
           docker manifest inspect "$TARGET:$VERSION" >/dev/null || {
             echo "::error::Docker package is not public. Set GHCR package visibility to Public, then retry release validation."
             exit 1
