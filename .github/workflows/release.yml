@@ -91,7 +91,7 @@ jobs:
           assert is_production_image()
           assert full_technical_audit_enabled() is False
           assert resolve_technical_audit_mode("audit", is_superuser=True) == "audit"
-          assert not any(route.path.startswith("/api/v1/tool-testing-lab") for route in app.routes)
+          assert not any(getattr(route, "path", "").startswith("/api/v1/tool-testing-lab") for route in app.routes)
           print("HARDENED PRODUCTION IMAGE PASS")
           '
       - name: Package exact Helm chart
