@@ -20,6 +20,8 @@ jobs:
       - uses: azure/setup-helm@v4
         with:
           version: v3.17.3
+      - name: Validate manually gated release workflow
+        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.7 -color .github/workflows/release.yml
       - name: Lint and template official release chart
         run: |
           set -euo pipefail
