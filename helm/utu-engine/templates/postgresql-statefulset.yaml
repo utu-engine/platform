@@ -1,0 +1,92 @@
+{{- if and .Values.postgresql.enabled (not .Values.postgresql.persistence.enabled) -}}
+{{- fail "PostgreSQL persistence must remain enabled; refusing an ephemeral production database" -}}
+{{- end -}}
+{{- if .Values.postgresql.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "utu-engine.fullname" . }}-postgresql
+  labels:
+    {{- include "utu-engine.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  serviceName: {{ include "utu-engine.fullname" . }}-postgresql
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "utu-engine.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: postgresql
+  template:
+    metadata:
+      labels:
+        {{- include "utu-engine.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: postgresql
+    spec:
+      containers:
+        - name: postgresql
+          image: {{ .Values.postgresql.image | quote }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgresql
+              containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "utu-engine.bootstrapSecretName" . }}
+                  key: {{ .Values.secrets.keys.postgresqlAdminPassword }}
+            - name: POSTGRES_INITDB_ARGS
+              value: "--auth-host=scram-sha-256"
+            - name: UTU_DB_NAME
+              value: {{ .Values.postgresql.database | quote }}
+            - name: UTU_DB_USER
+              value: {{ .Values.postgresql.user | quote }}
+            - name: UTU_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "utu-engine.bootstrapSecretName" . }}
+                  key: {{ .Values.secrets.keys.postgresqlPassword }}
+          readinessProbe:
+            exec:
+              command: ["/bin/sh", "-ec", "pg_isready -h 127.0.0.1 -p 5432 -U postgres -d postgres"]
+            initialDelaySeconds: {{ .Values.postgresql.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.postgresql.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.postgresql.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.postgresql.probes.readiness.failureThreshold }}
+          livenessProbe:
+            exec:
+              command: ["/bin/sh", "-ec", "pg_isready -h 127.0.0.1 -p 5432 -U postgres -d postgres"]
+            initialDelaySeconds: {{ .Values.postgresql.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.postgresql.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.postgresql.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.postgresql.probes.liveness.failureThreshold }}
+          resources:
+            {{- toYaml .Values.postgresql.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+      volumes:
+        - name: init-scripts
+          configMap:
+            name: {{ include "utu-engine.fullname" . }}-postgresql-init
+            defaultMode: 0555
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          {{- toYaml .Values.postgresql.persistence.accessModes | nindent 10 }}
+        {{- if .Values.postgresql.persistence.storageClass }}
+        storageClassName: {{ .Values.postgresql.persistence.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.postgresql.persistence.size }}
+{{- end }}
