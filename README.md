@@ -1,82 +1,67 @@
-# UTU Engine · Platform
+# UTU Engine
 
-The official production distribution of **UTU Engine**, an application-centric
-incident investigation platform. This repository contains public Helm charts,
-versioned releases and installation documentation; proprietary application
-source code and development workflows remain private.
+Official distribution repository for **UTU Engine**, an application-centric
+incident investigation platform.
 
-## Production release: v1.0.0
+This repository provides the Helm chart, installation instructions and versioned
+release information. It does not host the UTU Engine application source code.
 
-| Artifact | Location |
+## Release status
+
+The `1.0.0` Helm chart is available in the repository under
+[`helm/utu-engine`](helm/utu-engine). A public production image and OCI Helm
+release are **not yet confirmed published**. Check
+[Releases](https://github.com/utu-engine/platform/releases) before using
+the registry commands below.
+
+| Artifact | Planned stable reference |
 | --- | --- |
 | Docker image | `ghcr.io/utu-engine/platform:1.0.0` |
-| Latest stable image alias | `ghcr.io/utu-engine/platform:latest` |
-| Helm OCI chart | `oci://ghcr.io/utu-engine/charts/utu-engine` (version `1.0.0`) |
-| Chart source | `helm/utu-engine` |
-| Release archives | [GitHub Releases](https://github.com/utu-engine/platform/releases) |
+| Latest stable alias | `ghcr.io/utu-engine/platform:latest` |
+| Helm OCI chart | `oci://ghcr.io/utu-engine/charts/utu-engine` |
+| Helm chart version | `1.0.0` |
 
-### Install
+## Helm chart source
 
-Requires Helm 3.8+, Kubernetes, working PersistentVolume provisioning, and
-network access to the container registry and your observability/LLM systems.
+The source chart can be inspected in `helm/utu-engine`. With Helm 3:
 
 ```bash
-helm install utu-engine oci://ghcr.io/utu-engine/charts/utu-engine \
+git clone https://github.com/utu-engine/platform.git
+cd platform
+helm lint helm/utu-engine
+helm template utu-engine helm/utu-engine --namespace utu-engine
+```
+
+After the official production image and OCI chart are available, the intended
+installation command is:
+
+```bash
+helm upgrade --install utu-engine oci://ghcr.io/utu-engine/charts/utu-engine \
   --version 1.0.0 --namespace utu-engine --create-namespace
 ```
 
-### Download the chart
+The chart is configured for `ghcr.io/utu-engine/platform:1.0.0` with
+`IfNotPresent`, not a floating `main` or `latest` image.
 
-```bash
-helm pull oci://ghcr.io/utu-engine/charts/utu-engine --version 1.0.0 --untar
-```
+## Security and operation
 
-Or clone this repository and install the chart source:
+The official production distribution is designed to exclude the internal Test
+Tool Lab and Full Technical Audit from user-configurable options. The standard
+RCA report and redacted Technical Audit are retained.
 
-```bash
-helm upgrade --install utu-engine ./helm/utu-engine \
-  --namespace utu-engine --create-namespace
-```
+The Helm chart uses Kubernetes Secrets for credentials and may deploy a
+PostgreSQL 18 StatefulSet with persistent storage. Preserve Secrets and PVCs
+across upgrades. Review RBAC, ingress TLS, egress and backups before production
+installation. This chart does not automatically migrate existing Helm releases
+with different names.
 
-### Pull the application image
+## Release policy
 
-```bash
-docker pull ghcr.io/utu-engine/platform:1.0.0
-docker pull ghcr.io/utu-engine/platform:latest
-```
+Production versions are published as deliberately selected, verified SemVer
+releases, not on every change to development. Version tags must not be silently
+overwritten.
 
-The Helm chart defaults to the immutable `1.0.0` tag and `IfNotPresent`.
-The `latest` alias is published for convenience, not used by default by Helm.
+## License
 
-### Internal capabilities
-
-The official production image is compiled with an immutable production
-capability lock. **Tool Testing Lab** and **Full Technical Audit** cannot
-be enabled through Helm, environment variables, or the application's API.
-The standard RCA report and redacted Technical Audit remain available.
-
-These two internal settings do not appear in the public chart. Altering
-the software or building a custom image is outside the official distribution.
-
-### Deployment and data considerations
-
-The chart runs one UTU Engine Backend and optionally creates a persistent
-PostgreSQL 18 database. Bootstrap credentials and encryption keys are generated
-as Kubernetes Secrets; preserve those secrets and the PostgreSQL PVC for
-upgrade, restore, and recovery. Review the RBAC scope, network egress,
-resource limits and HTTPS ingress configuration before external access.
-
-This first production chart is **not** an in-place migration for a previous
-`rca-agent` Helm installation; plan migration separately.
-
-### Source development and release policy
-
-Development in `eerkalin/rca-agent` does not publish here. A production
-release requires a deliberate manual promotion of an independently tested
-production-build candidate. Published SemVer tags are never overwritten.
-
-### Licensing
-
-UTU Engine is proprietary software. Refer to [LICENSE](LICENSE) and the
-applicable written UTU Engine license agreement before use. Third-party
-components remain under their respective licenses.
+UTU Engine is proprietary. See [LICENSE](LICENSE) and the applicable software
+license agreement. Third-party components retain their respective licenses.
