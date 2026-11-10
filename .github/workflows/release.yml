@@ -67,7 +67,7 @@ jobs:
           # Candidate image must be anonymously readable; public workflow
           # must not receive source repo read tokens or credentials.
           docker manifest inspect "$source_image" >/dev/null
-          source_digest="$(docker buildx imagetools inspect "$source_image" | awk '$1=="Digest:" {print $2;exit}')"
+          source_digest="$(docker buildx imagetools inspect "$source_image" | awk '$1=="Digest:" && !seen {print $2;seen=1}')"
           [[ "$source_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
           echo "SOURCE_IMAGE=$SOURCE_REPO@$source_digest" >> "$GITHUB_ENV"
           echo "SOURCE_DIGEST=$source_digest" >> "$GITHUB_ENV"
