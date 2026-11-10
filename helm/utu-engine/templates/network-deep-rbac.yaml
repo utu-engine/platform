@@ -1,0 +1,53 @@
+{{- /*
+B10 optional active Deep Probe: grant temporary Job create/get/delete ONLY in
+explicit namespaces. Never grant cluster-wide write via an empty list.
+*/ -}}
+{{- $cfg := (.Values.networkDeepProbe | default dict) -}}
+{{- if (get $cfg "enabled" | default false) }}
+{{- if not .Values.rbac.create }}
+{{- fail "networkDeepProbe.enabled requires rbac.create=true" }}
+{{- end }}
+{{- $namespaces := get $cfg "namespaces" | default (list) | uniq }}
+{{- if eq (len $namespaces) 0 }}
+{{- fail "networkDeepProbe.enabled requires a non-empty networkDeepProbe.namespaces allowlist; cluster-wide Job write access is forbidden" }}
+{{- end }}
+{{- range $namespace := $namespaces }}
+{{- if or (not $namespace) (not (regexMatch "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" $namespace)) (gt (len $namespace) 63) }}
+{{- fail (printf "networkDeepProbe.namespaces contains invalid namespace: %q" $namespace) }}
+{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "utu-engine.fullname" $ }}-network-deep
+  namespace: {{ $namespace | quote }}
+  labels:
+    {{- include "utu-engine.labels" $ | nindent 4 }}
+rules:
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "delete"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["list"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "utu-engine.fullname" $ }}-network-deep
+  namespace: {{ $namespace | quote }}
+  labels:
+    {{- include "utu-engine.labels" $ | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "utu-engine.serviceAccountName" $ }}
+    namespace: {{ $.Release.Namespace | quote }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "utu-engine.fullname" $ }}-network-deep
+{{- end }}
+{{- end }}

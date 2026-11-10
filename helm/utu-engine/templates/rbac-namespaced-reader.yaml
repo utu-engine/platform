@@ -1,0 +1,100 @@
+{{- if and .Values.rbac.create (eq (.Values.rbac.readerScope | default "cluster") "namespaces") }}
+{{- $namespaces := (.Values.rbac.readerNamespaces | default (list)) }}
+{{- if eq (len $namespaces) 0 }}
+{{- fail "rbac.readerNamespaces must have at least one explicit namespace when rbac.readerScope=namespaces" }}
+{{- end }}
+{{- range $ns := uniq $namespaces }}
+{{- if or (eq $ns "*") (not (regexMatch "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" $ns)) }}
+{{- fail "rbac.readerNamespaces must contain exact valid Kubernetes namespace names" }}
+{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "utu-engine.fullname" $ }}-reader
+  namespace: {{ $ns | quote }}
+  labels:
+    {{- include "utu-engine.labels" $ | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints", "events", "persistentvolumeclaims", "resourcequotas", "limitranges"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["configmaps", "pods/log"]
+    verbs: ["get"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets", "daemonsets", "replicasets", "controllerrevisions"]
+    verbs: ["get", "list"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list"]
+  - apiGroups: ["events.k8s.io"]
+    resources: ["events"]
+    verbs: ["get", "list"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list"]
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list"]
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["get", "list"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses", "networkpolicies"]
+    verbs: ["get", "list"]
+  {{- if $.Values.rbac.clusterDiagnosticsRead }}
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get"]
+  {{- end }}
+  {{- if $.Values.rbac.csiStorageRead }}
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["csistoragecapacities"]
+    verbs: ["list"]
+  {{- end }}
+  {{- if $.Values.rbac.kedaRead }}
+  - apiGroups: ["keda.sh"]
+    resources: ["scaledobjects", "scaledjobs"]
+    verbs: ["get", "list"]
+  {{- end }}
+  {{- if $.Values.rbac.gatewayApiRead }}
+  - apiGroups: ["gateway.networking.k8s.io"]
+    resources: ["gateways", "httproutes", "grpcroutes", "tcproutes"]
+    verbs: ["get", "list"]
+  {{- end }}
+  {{- range $rule := ($.Values.rbac.namespacedExtraReadOnlyRules | default (list)) }}
+  {{- range $group := ($rule.apiGroups | default (list)) }}
+  {{- if or (eq $group "*") (eq $group "authentication.k8s.io") (eq $group "authorization.k8s.io") }}
+  {{- fail "rbac.namespacedExtraReadOnlyRules must not contain wildcard or authorization groups" }}
+  {{- end }}
+  {{- end }}
+  {{- range $resource := ($rule.resources | default (list)) }}
+  {{- if or (eq $resource "*") (contains "/" $resource) (has (lower $resource) (list "secrets" "tokenreviews" "subjectaccessreviews" "selfsubjectaccessreviews")) }}
+  {{- fail "rbac.namespacedExtraReadOnlyRules must not grant wildcard, subresource or Secret/authorization resources" }}
+  {{- end }}
+  {{- end }}
+  - apiGroups:
+      {{- toYaml ($rule.apiGroups | default (list)) | nindent 6 }}
+    resources:
+      {{- toYaml ($rule.resources | default (list)) | nindent 6 }}
+    verbs: ["get", "list"]
+  {{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "utu-engine.fullname" $ }}-reader
+  namespace: {{ $ns | quote }}
+  labels:
+    {{- include "utu-engine.labels" $ | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "utu-engine.serviceAccountName" $ }}
+    namespace: {{ $.Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "utu-engine.fullname" $ }}-reader
+{{- end }}
+{{- end }}

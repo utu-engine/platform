@@ -1,0 +1,214 @@
+# UTU Engine V1 supports one Backend Pod; the Helm Deployment uses Recreate.
+# Active Investigations may fail on upgrade and can be retried manually.
+replicaCount: 1
+revisionHistoryLimit: 3
+terminationGracePeriodSeconds: 30
+
+image:
+  repository: ghcr.io/utu-engine/platform
+  tag: "1.0.0"
+  # Official stable production image; never float with :latest by default.
+  # With digest empty, Alembic runs inside the SAME Backend image at startup,
+  # preventing migrator/backend build drift.
+  # Optional pinned mode: specify full tested sha256 digest. That mode retains
+  # a dedicated migration init-container with exactly the same pinned image.
+  digest: ""
+  pullPolicy: IfNotPresent
+
+# References to pre-created Kubernetes registry Secrets. Store only Secret names here;
+# never commit GHCR usernames, PATs, or docker config JSON to Git/values.
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "utu-engine"
+
+runtime:
+  logLevel: INFO
+  # Optional external base URL used to render clickable Investigation links in notifications.
+  # Example: https://utu-engine.example.com
+  publicBaseUrl: ""
+
+auth:
+  # Authentication is enabled by default. The first account must rotate its
+  # temporary bootstrap password before any investigation API can be used.
+  enabled: true
+  # Preferred clean-install bootstrap identity. Leave empty to use the
+  # deprecated bootstrapAdminUsername value for upgrade compatibility.
+  bootstrapSuperuserUsername: ""
+  # Deprecated compatibility value for existing Helm releases.
+  bootstrapAdminUsername: admin
+  sessionTtlSeconds: 28800
+  # HTTPS is required for browser session cookies. The CSRF origin check uses
+  # this policy to understand TLS-terminating Ingress (browser HTTPS -> Pod HTTP)
+  # without trusting client-supplied X-Forwarded-* headers.
+  # For isolated HTTP-only development/port-forward, opt out in local values.
+  # Never disable for a public HTTPS deployment.
+  cookieSecure: true
+
+serviceAccount:
+  create: true
+  name: ""
+
+rbac:
+  create: true
+  # Keep existing ClusterRole unchanged unless the administrator explicitly
+  # migrates to namespace-scoped Roles (in-cluster connection only).
+  # A switch prunes Helm-managed legacy ClusterRole/Binding: review permissions
+  # and confirm workloads before enabling. No implicit scope expansion.
+  readerScope: cluster # cluster | namespaces
+  readerNamespaces: [] # required when readerScope=namespaces
+  # Optional exact namespaced resources for scoped Kubernetes Tools, e.g.
+  # coordination.k8s.io leases, storage.k8s.io csistoragecapacities.
+  # Cluster resources (PV, VolumeAttachment, APIService/CRD) need independent
+  # explicit cluster read grants; this Role cannot grant them.
+  namespacedExtraReadOnlyRules: []
+  # Optional fixed non-resource API health paths. Adds no arbitrary URL/host,
+  # and is only applied to the legacy cluster-reader template.
+  # Included by default for in-cluster reader; disable any feature separately.
+  # Tool checkboxes do not grant RBAC. No Secrets, exec or mutation privileges.
+  clusterDiagnosticsRead: true
+  csiStorageRead: true
+  gatewayApiRead: true
+  kedaRead: true
+  # Legacy compatibility for /version,/livez,/readyz independent of clusterDiagnosticsRead.
+  clusterHealthNonResourceRead: true
+  # Explicit extension point for CRDs/custom APIs needed by generic read.
+  # Verbs are hard-coded to get/list by the template and wildcard groups/resources
+  # are rejected. Example:
+  # extraReadOnlyRules:
+  #   - apiGroups: ["keda.sh"]
+  #     resources: ["scaledobjects"]
+  extraReadOnlyRules: []
+
+# B10 Deep Probe performs an ACTIVE diagnostic by creating temporary Jobs.
+# Fail-closed by default. To enable it, opt in AND list explicit namespaces.
+# The chart never grants cluster-wide Job create/delete access. Existing
+# deployments relying on implicit cluster-wide rights must configure a scoped
+# namespace allowlist before an upgrade with this chart.
+# Example:
+# networkDeepProbe:
+#   enabled: true
+#   namespaces: [otel-demo, shipping]
+# External kubeconfig Connections need independent namespace-scoped RBAC.
+networkDeepProbe:
+  enabled: false
+  namespaces: []
+
+# Phase 0: present but disabled by default so upgrades and current
+# investigations retain their existing network behavior.
+#
+# When enabled this NetworkPolicy isolates UTU Engine egress. Operators must
+# explicitly add every required destination (database, Kubernetes API,
+# Prometheus/Elastic/APM and LLM endpoints) using Kubernetes NetworkPolicy
+# egress rules. Standard NetworkPolicy does not support FQDN peers.
+networkPolicy:
+  enabled: false
+  dns:
+    enabled: true
+    namespace: kube-system
+    podSelector:
+      k8s-app: kube-dns
+  egress: []
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+  nodePort: null
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: utu-engine.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 768Mi
+
+probes:
+  # Used when migration.enabled=true with an unpinned tag: suppress liveness
+  # until migrations finish, allowing up to 30 minutes before startup fails.
+  # Optional for legacy customized values files: the template supplies these
+  # defaults even if startup is missing. Override here if needed.
+  startup:
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 180
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 6
+  liveness:
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# By default the chart creates one bootstrap Secret and generates all internal
+# credentials automatically. Set existingSecret only when you intentionally
+# want to manage DATABASE_URL, UTU_MASTER_KEY, authentication secrets and PostgreSQL
+# passwords yourself.
+secrets:
+  existingSecret: ""
+  keys:
+    databaseUrl: database-url
+    masterKey: utu-master-key
+    authKey: utu-auth-key
+    # Legacy Secret key name is intentionally retained so existing managed and
+    # external Secrets continue to work. It now bootstraps the first superuser.
+    bootstrapAdminPassword: bootstrap-admin-password
+    postgresqlAdminPassword: postgresql-admin-password
+    postgresqlPassword: postgresql-password
+    legacyGeminiApiKey: gemini-api-key
+    legacyGeminiModel: gemini-model
+
+postgresql:
+  enabled: true
+  # Official PostgreSQL 18 (PostgreSQL License); keep storage mounted at /var/lib/postgresql.
+  image: postgres:18.6
+  database: utu-engine
+  user: utu-engine
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  probes:
+    readiness:
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 12
+    liveness:
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 6
+
+migration:
+  enabled: true
+
+podAnnotations: {}
+podLabels: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
