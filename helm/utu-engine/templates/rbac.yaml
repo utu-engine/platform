@@ -1,0 +1,158 @@
+{{- if and .Values.rbac.create (eq (.Values.rbac.readerScope | default "cluster") "cluster") }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "utu-engine.fullname" . }}-reader
+  labels:
+    {{- include "utu-engine.labels" . | nindent 4 }}
+rules:
+  - nonResourceURLs:
+      - /api
+      - /apis
+      - /api/*
+      - /apis/*
+    verbs: ["get"]
+  {{- if or .Values.rbac.clusterHealthNonResourceRead .Values.rbac.clusterDiagnosticsRead }}
+  - nonResourceURLs: ["/version", "/livez", "/readyz"]
+    verbs: ["get"]
+  {{- end }}
+  - apiGroups: [""]
+    resources:
+      - namespaces
+      - nodes
+      - pods
+      - services
+      - endpoints
+      - events
+      - persistentvolumeclaims
+      - persistentvolumes
+      - resourcequotas
+      - limitranges
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources:
+      - pods/log
+    verbs: ["get"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - statefulsets
+      - daemonsets
+      - replicasets
+      - controllerrevisions
+    verbs: ["get", "list"]
+  - apiGroups: ["events.k8s.io"]
+    resources:
+      - events
+    verbs: ["get", "list"]
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+      - cronjobs
+    verbs: ["get", "list"]
+  - apiGroups: ["autoscaling"]
+    resources:
+      - horizontalpodautoscalers
+    verbs: ["get", "list"]
+  - apiGroups: ["policy"]
+    resources:
+      - poddisruptionbudgets
+    verbs: ["get", "list"]
+  - apiGroups: ["networking.k8s.io"]
+    resources:
+      - ingresses
+      - networkpolicies
+    verbs: ["get", "list"]
+  {{- if .Values.rbac.clusterDiagnosticsRead }}
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get"]
+  - apiGroups: ["apiregistration.k8s.io"]
+    resources: ["apiservices"]
+    verbs: ["get"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations", "mutatingwebhookconfigurations"]
+    verbs: ["get"]
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get"]
+  {{- end }}
+  {{- if .Values.rbac.csiStorageRead }}
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["csidrivers", "csinodes"]
+    verbs: ["get"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["volumeattachments"]
+    verbs: ["list"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["csistoragecapacities"]
+    verbs: ["list"]
+  {{- end }}
+  {{- if .Values.rbac.kedaRead }}
+  - apiGroups: ["keda.sh"]
+    resources: ["scaledobjects", "scaledjobs"]
+    verbs: ["get", "list"]
+  {{- end }}
+  {{- if .Values.rbac.gatewayApiRead }}
+  - apiGroups: ["gateway.networking.k8s.io"]
+    resources: ["gateways", "httproutes", "grpcroutes", "tcproutes"]
+    verbs: ["get", "list"]
+  {{- end }}
+  - apiGroups: ["storage.k8s.io"]
+    resources:
+      - storageclasses
+    verbs: ["get", "list"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources:
+      - pods
+      - nodes
+    verbs: ["get", "list"]
+  {{- range $index, $rule := .Values.rbac.extraReadOnlyRules }}
+  {{- range $group := ($rule.apiGroups | default (list)) }}
+  {{- if eq $group "*" }}
+  {{- fail "rbac.extraReadOnlyRules apiGroups may not contain wildcard *" }}
+  {{- end }}
+  {{- if or (eq $group "authentication.k8s.io") (eq $group "authorization.k8s.io") }}
+  {{- fail "rbac.extraReadOnlyRules may not grant authentication/authorization API groups" }}
+  {{- end }}
+  {{- end }}
+  {{- range $resource := ($rule.resources | default (list)) }}
+  {{- $resourceLower := lower $resource }}
+  {{- if eq $resource "*" }}
+  {{- fail "rbac.extraReadOnlyRules resources may not contain wildcard *" }}
+  {{- end }}
+  {{- if contains "/" $resource }}
+  {{- fail "rbac.extraReadOnlyRules may not grant Kubernetes subresources" }}
+  {{- end }}
+  {{- if has $resourceLower (list "secrets" "tokenreviews" "subjectaccessreviews" "selfsubjectaccessreviews" "selfsubjectrulesreviews") }}
+  {{- fail "rbac.extraReadOnlyRules may not grant security-sensitive resources" }}
+  {{- end }}
+  {{- end }}
+  - apiGroups:
+      {{- toYaml ($rule.apiGroups | default (list)) | nindent 6 }}
+    resources:
+      {{- toYaml ($rule.resources | default (list)) | nindent 6 }}
+    verbs: ["get", "list"]
+  {{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "utu-engine.fullname" . }}-reader
+  labels:
+    {{- include "utu-engine.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "utu-engine.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "utu-engine.fullname" . }}-reader
+{{- end }}

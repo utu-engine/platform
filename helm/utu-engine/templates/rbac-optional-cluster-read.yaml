@@ -1,0 +1,55 @@
+{{- /*
+For rbac.readerScope=namespaces, cluster-scoped evidence requires a separate
+strictly read-only ClusterRole. The ordinary reader stays namespaced.
+No Secret, Job create, TokenRequest, exec or other mutable permission.
+*/ -}}
+{{- if and .Values.rbac.create (eq (.Values.rbac.readerScope | default "cluster") "namespaces") (or .Values.rbac.clusterDiagnosticsRead .Values.rbac.csiStorageRead .Values.rbac.gatewayApiRead .Values.rbac.kedaRead) }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "utu-engine.fullname" . }}-optional-cluster-reader
+  labels:
+    {{- include "utu-engine.labels" . | nindent 4 }}
+rules:
+  - nonResourceURLs: ["/api", "/apis", "/api/*", "/apis/*"]
+    verbs: ["get"]
+  {{- if .Values.rbac.clusterDiagnosticsRead }}
+  - nonResourceURLs: ["/version", "/livez", "/readyz"]
+    verbs: ["get"]
+  - apiGroups: ["apiregistration.k8s.io"]
+    resources: ["apiservices"]
+    verbs: ["get"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations", "mutatingwebhookconfigurations"]
+    verbs: ["get"]
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get"]
+  {{- end }}
+  {{- if .Values.rbac.csiStorageRead }}
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses", "csidrivers", "csinodes"]
+    verbs: ["get"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["volumeattachments"]
+    verbs: ["list"]
+  {{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "utu-engine.fullname" . }}-optional-cluster-reader
+  labels:
+    {{- include "utu-engine.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "utu-engine.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "utu-engine.fullname" . }}-optional-cluster-reader
+{{- end }}

@@ -1,0 +1,19 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "utu-engine.fullname" . }}-postgresql-init
+  labels:
+    {{- include "utu-engine.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+data:
+  10-utu-app.sh: |
+    #!/bin/sh
+    set -eu
+    # The application uses a least-privilege login; postgres remains the DB administrator.
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
+      -v app_user="$UTU_DB_USER" -v app_password="$UTU_DB_PASSWORD" -v app_db="$UTU_DB_NAME" <<'SQL'
+    SELECT format('CREATE ROLE %I LOGIN PASSWORD %L NOSUPERUSER NOCREATEDB NOCREATEROLE', :'app_user', :'app_password') \gexec
+    SELECT format('CREATE DATABASE %I OWNER %I', :'app_db', :'app_user') \gexec
+    SQL
+{{- end }}

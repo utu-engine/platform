@@ -1,0 +1,38 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "utu-engine.fullname" . }}-egress
+  labels:
+    {{- include "utu-engine.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "utu-engine.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  policyTypes:
+    - Egress
+  egress:
+{{ if .Values.networkPolicy.dns.enabled }}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.dns.namespace | quote }}
+          {{- with .Values.networkPolicy.dns.podSelector }}
+          podSelector:
+            matchLabels:
+              {{- toYaml . | nindent 14 }}
+          {{- end }}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+{{ end }}
+{{ with .Values.networkPolicy.egress }}
+{{ toYaml . | nindent 4 }}
+{{ end }}
+{{ if and (not .Values.networkPolicy.dns.enabled) (not .Values.networkPolicy.egress) }}
+    []
+{{ end }}
+{{- end }}

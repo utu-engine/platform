@@ -1,0 +1,243 @@
+{{- if ne (int .Values.replicaCount) 1 }}
+{{- fail "UTU Engine V1 supports exactly one Backend Pod (replicaCount: 1); multi-pod execution requires a distributed investigation owner" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "utu-engine.fullname" . }}
+  labels:
+    {{- include "utu-engine.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "utu-engine.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        {{- include "utu-engine.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- /*
+          Helm increments Release.Revision on every upgrade, even when values
+          and the floating image tag (e.g. :main) are unchanged. Updating this
+          Pod-template annotation triggers a new Pod, and pullPolicy: Always
+          resolves the latest tag. User podAnnotations are preserved; the Helm
+          revision key is reserved so it cannot be overridden accidentally.
+      */}}
+      {{- $podAnnotations := deepCopy (default dict .Values.podAnnotations) }}
+      {{- $_ := set $podAnnotations "utu-engine.io/helm-release-revision" (toString .Release.Revision) }}
+      annotations:
+        {{- toYaml $podAnnotations | nindent 8 }}
+    spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      serviceAccountName: {{ include "utu-engine.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- /* With a floating tag, migration runs inside the Backend container.
+            Kubernetes must resolve exactly one image for schema + code.
+            Digest-pinned releases retain the separate init-container. */ -}}
+      {{- if and .Values.migration.enabled .Values.image.digest }}
+      initContainers:
+        - name: migrate
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          image: {{ include "utu-engine.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              until python -c 'from app.db.session import engine; c=engine.connect(); c.close()'; do
+                echo "waiting for PostgreSQL"
+                sleep 3
+              done
+              # Development images use Alembic; the compiled release image
+              # contains native migration modules but NO Python migration scripts.
+              if python -c 'from app.release_profile import is_production_image; raise SystemExit(0 if is_production_image() else 1)'; then
+                python -c 'from app.db.compiled_migration import upgrade_to_head; print("Compiled schema revision:", upgrade_to_head())'
+              else
+                alembic upgrade head
+              fi
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "utu-engine.bootstrapSecretName" . }}
+                  key: {{ .Values.secrets.keys.databaseUrl }}
+            - name: UTU_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "utu-engine.bootstrapSecretName" . }}
+                  key: {{ .Values.secrets.keys.masterKey }}
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "utu-engine.bootstrapSecretName" . }}
+                  key: {{ .Values.secrets.keys.legacyGeminiApiKey }}
+                  optional: true
+            - name: GEMINI_MODEL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "utu-engine.bootstrapSecretName" . }}
+                  key: {{ .Values.secrets.keys.legacyGeminiModel }}
+                  optional: true
+            - name: LOG_LEVEL
+              value: {{ .Values.runtime.logLevel | quote }}
+      {{- end }}
+      containers:
+        - name: utu-engine
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          image: {{ include "utu-engine.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if and .Values.migration.enabled (not .Values.image.digest) }}
+          # No separately pulled migrator: run schema upgrade and API from
+          # the *same* image so mutable :main can never split their versions.
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              until python -c 'from app.db.session import engine; c=engine.connect(); c.close()'; do
+                echo "waiting for PostgreSQL"
+                sleep 3
+              done
+              # Development images use Alembic; the compiled release image
+              # contains native migration modules but NO Python migration scripts.
+              if python -c 'from app.release_profile import is_production_image; raise SystemExit(0 if is_production_image() else 1)'; then
+                python -c 'from app.db.compiled_migration import upgrade_to_head; print("Compiled schema revision:", upgrade_to_head())'
+              else
+                alembic upgrade head
+              fi
+              exec uvicorn app.main:app --host 0.0.0.0 --port {{ .Values.service.targetPort }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          env:
+            # Internal opt-in intentionally absent from the public values.yaml.
+            # The backend enforces access; the UI never selects full mode itself.
+            - name: UTU_FULL_TECHNICAL_AUDIT
+              value: {{ (get (default dict .Values.internal) "fullTechnicalAudit" | default false) | quote }}
+            # This must be on the application container, not the migrator.
+            # It is a Helm-controlled install-time capability, not a Tool setting.
+            - name: UTU_INCLUSTER_DEEP_PROBE_ENABLED
+              value: {{ and .Values.rbac.create (.Values.networkDeepProbe.enabled | default false) | quote }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "utu-engine.bootstrapSecretName" . }}
+                  key: {{ .Values.secrets.keys.databaseUrl }}
+            - name: UTU_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "utu-engine.bootstrapSecretName" . }}
+                  key: {{ .Values.secrets.keys.masterKey }}
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "utu-engine.bootstrapSecretName" . }}
+                  key: {{ .Values.secrets.keys.legacyGeminiApiKey }}
+                  optional: true
+            - name: GEMINI_MODEL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "utu-engine.bootstrapSecretName" . }}
+                  key: {{ .Values.secrets.keys.legacyGeminiModel }}
+                  optional: true
+            - name: LOG_LEVEL
+              value: {{ .Values.runtime.logLevel | quote }}
+            {{- if .Values.runtime.publicBaseUrl }}
+            - name: PUBLIC_BASE_URL
+              value: {{ .Values.runtime.publicBaseUrl | quote }}
+            {{- end }}
+            - name: AUTH_ENABLED
+              value: {{ .Values.auth.enabled | quote }}
+            # Explicit opt-in only; never enabled by the shipped values.yaml.
+            - name: TOOL_TESTING_LAB_ENABLED
+              value: {{ get (.Values.testingLab | default dict) "enabled" | default false | quote }}
+            - name: AUTH_SESSION_TTL_SECONDS
+              value: {{ .Values.auth.sessionTtlSeconds | quote }}
+            - name: AUTH_COOKIE_SECURE
+              value: {{ .Values.auth.cookieSecure | quote }}
+            {{- if .Values.auth.enabled }}
+            - name: UTU_AUTH_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "utu-engine.bootstrapSecretName" . }}
+                  key: {{ .Values.secrets.keys.authKey }}
+            - name: BOOTSTRAP_SUPERUSER_USERNAME
+              value: {{ default .Values.auth.bootstrapAdminUsername .Values.auth.bootstrapSuperuserUsername | quote }}
+            - name: BOOTSTRAP_SUPERUSER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "utu-engine.bootstrapSecretName" . }}
+                  key: {{ .Values.secrets.keys.bootstrapAdminPassword }}
+            {{- end }}
+          {{- if and .Values.migration.enabled (not .Values.image.digest) }}
+          {{- /* Older customized Helm values may omit the new startup section. */}}
+          {{- $startupProbeSettings := get (default dict .Values.probes) "startup" | default dict }}
+          # Disable liveness until this image's Alembic migration completes.
+          startupProbe:
+            httpGet:
+              path: /api/v1/health/database
+              port: http
+            initialDelaySeconds: {{ get $startupProbeSettings "initialDelaySeconds" | default 0 }}
+            periodSeconds: {{ get $startupProbeSettings "periodSeconds" | default 10 }}
+            timeoutSeconds: {{ get $startupProbeSettings "timeoutSeconds" | default 3 }}
+            failureThreshold: {{ get $startupProbeSettings "failureThreshold" | default 180 }}
+          {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health/database
+              port: http
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

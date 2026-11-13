@@ -1,0 +1,39 @@
+name: Validate public Helm release
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'helm/**'
+      - '.github/workflows/helm-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.17.3
+      - name: Lint and template official release chart
+        run: |
+          set -euo pipefail
+          helm lint helm/utu-engine
+          helm template utu-engine helm/utu-engine -n utu-engine > /tmp/utu.yaml
+          grep -q 'ghcr.io/utu-engine/platform:1.0.0' /tmp/utu.yaml
+          ! grep -E 'TOOL_TESTING_LAB_ENABLED|UTU_FULL_TECHNICAL_AUDIT' /tmp/utu.yaml
+      - name: Reject hidden internal values
+        run: |
+          set -euo pipefail
+          if helm template utu-engine helm/utu-engine --set testingLab.enabled=true >/dev/null 2>&1; then
+            echo "Tool Testing Lab must not be configurable in production"
+            exit 1
+          fi
+          if helm template utu-engine helm/utu-engine --set internal.fullTechnicalAudit=true >/dev/null 2>&1; then
+            echo "Full Technical Audit must not be configurable in production"
+            exit 1
+          fi
