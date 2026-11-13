@@ -6,6 +6,11 @@ incident investigation platform.
 This repository provides the Helm chart, installation instructions and versioned
 release information. It does not host the UTU Engine application source code.
 
+## Official links
+
+- **Website:** [utu-engine.com](https://utu-engine.com/)
+- **Documentation:** [docs.utu-engine.com](https://docs.utu-engine.com/)
+
 ## Release status
 
 The `1.0.0` Helm chart is available in the repository under
